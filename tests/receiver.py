@@ -18,9 +18,9 @@ import ssl
 import sys
 
 
-def serve_udp(port, out):
+def serve_udp(port, out, bind="127.0.0.1"):
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    sock.bind(("127.0.0.1", port))
+    sock.bind((bind, port))
     while True:
         data, _ = sock.recvfrom(65535)
         out.write(data.rstrip(b"\n") + b"\n")
@@ -52,11 +52,11 @@ def read_messages(conn):
                 buf = buf[nl + 1:]
 
 
-def serve_tcp(port, out, certfile=None, keyfile=None):
+def serve_tcp(port, out, certfile=None, keyfile=None, bind="127.0.0.1"):
     import ssl
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    sock.bind(("127.0.0.1", port))
+    sock.bind((bind, port))
     sock.listen(5)
     if certfile:
         context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
@@ -83,13 +83,17 @@ def serve_tcp(port, out, certfile=None, keyfile=None):
 
 def main():
     proto, port, outfile = sys.argv[1], int(sys.argv[2]), sys.argv[3]
-    cert = sys.argv[4] if len(sys.argv) > 4 else None
-    key = sys.argv[5] if len(sys.argv) > 5 else None
+    rest = sys.argv[4:]
+    bind = "0.0.0.0" if rest and rest[0] == "--bind" else "127.0.0.1"
+    if bind == "0.0.0.0":
+        rest = rest[2:]
+    cert = rest[0] if len(rest) > 0 else None
+    key = rest[1] if len(rest) > 1 else None
     with open(outfile, "wb") as out:
         if proto == "udp":
-            serve_udp(port, out)
+            serve_udp(port, out, bind)
         elif proto in ("tcp", "tls"):
-            serve_tcp(port, out, cert, key)
+            serve_tcp(port, out, cert, key, bind)
         else:
             raise SystemExit(f"unknown proto {proto}")
 
