@@ -1,0 +1,32 @@
+[Unit]
+Description=logrelay - relay log files to a syslog/rsyslog host (RFC 5424)
+Documentation=file:///opt/logrelay/README.md
+After=network-online.target
+Wants=network-online.target
+# A misconfigured script exits immediately on startup; these limits make
+# systemd give up after 5 failed starts within 30s and mark the unit as
+# failed instead of restarting forever (check journal for the error).
+StartLimitIntervalSec=30
+StartLimitBurst=5
+
+[Service]
+Type=simple
+# Adjust this path if you deploy the repo somewhere other than /opt/logrelay.
+ExecStart=/opt/logrelay/service/logrelay.sh
+
+# If a relay pipeline dies unexpectedly, restart the whole service.
+Restart=on-failure
+RestartSec=5
+
+# Reading /var/log/* usually requires root or the 'adm' group; uncomment and
+# adjust to run unprivileged.
+#User=root
+#Group=adm
+
+# Optional hardening; logrelay only reads files and opens network sockets.
+#NoNewPrivileges=true
+#ProtectHome=read-only
+#ProtectSystem=full
+
+[Install]
+WantedBy=multi-user.target
