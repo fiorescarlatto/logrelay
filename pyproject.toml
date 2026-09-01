@@ -1,0 +1,10 @@
+[project]
+name = "logrelay"
+version = "0.2.0"
+description = "Relay log lines from a file or stdin to a syslog server (RFC 5424)"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = []
+
+[dependency-groups]
+dev = ["rfc5424-logging-handler>=1.4.3"]
